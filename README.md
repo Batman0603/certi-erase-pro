@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: certi-erase-onntdspwv-karthikeyan-k-rs-projects.vercel.app
+**URL**: https://certi-erase-onntdspwv-karthikeyan-k-rs-projects.vercel.app/
 
 ## How can I edit this code?
 
