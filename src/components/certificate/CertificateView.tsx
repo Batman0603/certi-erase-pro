@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, Eye, FileText, Shield, Calendar, User, HardDrive, CheckCircle, Verified } from "lucide-react";
 import { WipeSession } from "../TrustWipeApp";
+import { useToast } from "@/hooks/use-toast";
 
 interface CertificateViewProps {
   wipeSession: WipeSession | null;
@@ -10,6 +11,48 @@ interface CertificateViewProps {
 }
 
 export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) => {
+  const { toast } = useToast();
+
+  const downloadPDF = (certId: string) => {
+    // Simulate PDF download
+    const element = document.createElement('a');
+    const content = `Trust Wipe Certificate ${certId} - Generated on ${new Date().toISOString()}`;
+    const file = new Blob([content], { type: 'application/pdf' });
+    element.href = URL.createObjectURL(file);
+    element.download = `TrustWipe_Certificate_${certId}.pdf`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({
+      title: "Certificate Downloaded",
+      description: `PDF certificate ${certId} has been downloaded successfully.`,
+    });
+  };
+
+  const downloadJSON = (certId: string, cert: any) => {
+    // Simulate JSON download
+    const element = document.createElement('a');
+    const file = new Blob([JSON.stringify(cert, null, 2)], { type: 'application/json' });
+    element.href = URL.createObjectURL(file);
+    element.download = `TrustWipe_Certificate_${certId}.json`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({
+      title: "Certificate Downloaded",
+      description: `JSON certificate ${certId} has been downloaded successfully.`,
+    });
+  };
+
+  const viewFullCertificate = (certId: string) => {
+    toast({
+      title: "Certificate Viewer",
+      description: `Opening full certificate view for ${certId}...`,
+    });
+  };
+
   const mockCertificates = [
     {
       id: 'CERT-2024-001',
@@ -147,15 +190,15 @@ export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) =
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={() => viewFullCertificate(cert.id)}>
             <Eye className="h-4 w-4 mr-2" />
             View Full Certificate
           </Button>
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={() => downloadPDF(cert.id)}>
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={() => downloadJSON(cert.id, cert)}>
             <FileText className="h-4 w-4 mr-2" />
             Download JSON
           </Button>
@@ -250,7 +293,11 @@ export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) =
         <div>
           <h2 className="text-lg font-semibold mb-4">All Certificates</h2>
           <div className="space-y-4">
-            {mockCertificates.map((cert) => renderCertificatePreview(cert))}
+            {mockCertificates.map((cert) => (
+              <div key={cert.id}>
+                {renderCertificatePreview(cert)}
+              </div>
+            ))}
           </div>
         </div>
       </div>

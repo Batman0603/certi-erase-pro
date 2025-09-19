@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Shield, HardDrive, FileCheck, Award, LogOut, Plus, Activity, AlertTriangle } from "lucide-react";
 import { User } from "../TrustWipeApp";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardProps {
   user: User;
@@ -11,12 +12,21 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ user, onLogout, onStartWipe, onViewCertificates }: DashboardProps) => {
+  const { toast } = useToast();
+  
   const stats = [
     { label: "Devices Wiped", value: "247", icon: HardDrive, color: "text-success" },
     { label: "Certificates Generated", value: "247", icon: Award, color: "text-primary" },
     { label: "Active Sessions", value: "0", icon: Activity, color: "text-muted-foreground" },
     { label: "Failed Operations", value: "3", icon: AlertTriangle, color: "text-warning" },
   ];
+
+  const handleSystemStatus = () => {
+    toast({
+      title: "System Status Check",
+      description: "🟢 System is running optimally. All components are operational.",
+    });
+  };
 
   const recentActivities = [
     { device: "Samsung Galaxy S23", action: "Complete Device Wipe", status: "completed", time: "2 hours ago" },
@@ -87,7 +97,7 @@ export const Dashboard = ({ user, onLogout, onStartWipe, onViewCertificates }: D
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleSystemStatus}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10">
