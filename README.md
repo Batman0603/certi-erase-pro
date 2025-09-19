@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/76b73ca0-c8ee-4ae2-b1bf-548617d046a1
+**URL**: certi-erase-onntdspwv-karthikeyan-k-rs-projects.vercel.app
 
 ## How can I edit this code?
 
