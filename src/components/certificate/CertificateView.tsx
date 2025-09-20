@@ -1,9 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Eye, FileText, Shield, Calendar, User, HardDrive, CheckCircle, Verified } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Download, Eye, FileText, Shield, Calendar, User, HardDrive, CheckCircle, Verified, QrCode } from "lucide-react";
 import { WipeSession } from "../TrustWipeApp";
 import { useToast } from "@/hooks/use-toast";
+import QRCode from "qrcode";
+import { useState, useEffect } from "react";
 
 interface CertificateViewProps {
   wipeSession: WipeSession | null;
@@ -12,6 +15,8 @@ interface CertificateViewProps {
 
 export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) => {
   const { toast } = useToast();
+  const [selectedCert, setSelectedCert] = useState<typeof mockCertificates[0] | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   const downloadPDF = (certId: string) => {
     // Simulate PDF download
@@ -46,11 +51,36 @@ export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) =
     });
   };
 
-  const viewFullCertificate = (certId: string) => {
-    toast({
-      title: "Certificate Viewer",
-      description: `Opening full certificate view for ${certId}...`,
-    });
+  const viewFullCertificate = async (cert: typeof mockCertificates[0]) => {
+    setSelectedCert(cert);
+    
+    // Generate QR code with certificate data
+    const certData = {
+      id: cert.id,
+      deviceName: cert.deviceName,
+      deviceSerial: cert.deviceSerial,
+      wipeMode: cert.wipeMode,
+      operator: cert.operator,
+      timestamp: cert.timestamp,
+      verified: cert.verified,
+      standard: cert.standard,
+      signatureAlgorithm: cert.signatureAlgorithm,
+      verificationUrl: `https://trust-wipe.com/verify/${cert.id}`
+    };
+    
+    try {
+      const qrUrl = await QRCode.toDataURL(JSON.stringify(certData), {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeUrl(qrUrl);
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
   };
 
   const mockCertificates = [
@@ -190,10 +220,144 @@ export const CertificateView = ({ wipeSession, onBack }: CertificateViewProps) =
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <Button variant="outline" className="flex-1" onClick={() => viewFullCertificate(cert.id)}>
-            <Eye className="h-4 w-4 mr-2" />
-            View Full Certificate
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1" onClick={() => viewFullCertificate(cert)}>
+                <Eye className="h-4 w-4 mr-2" />
+                View Full Certificate
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Trust Wipe Certificate - {selectedCert?.id}</span>
+                  <Verified className="h-5 w-5 text-success" />
+                </DialogTitle>
+              </DialogHeader>
+              
+              {selectedCert && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Certificate Details */}
+                  <div className="space-y-6">
+                    {/* Device Information */}
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <HardDrive className="h-4 w-4 mr-2" />
+                        Device Information
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Device Name:</span>
+                          <span className="font-medium">{selectedCert.deviceName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Serial Number:</span>
+                          <span className="font-mono text-xs">{selectedCert.deviceSerial}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Operation Details */}
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Operation Details
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Wipe Mode:</span>
+                          <span className="font-medium">{selectedCert.wipeMode}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Standard:</span>
+                          <span className="font-medium">{selectedCert.standard}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Backup Created:</span>
+                          <span className="font-medium">{selectedCert.backupCreated ? 'Yes (AES-256)' : 'No'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Signature:</span>
+                          <span className="font-medium">{selectedCert.signatureAlgorithm}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Certification Details */}
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Certification Details
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Operator:</span>
+                          <span className="font-medium">{selectedCert.operator}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Date & Time:</span>
+                          <span className="font-medium">{new Date(selectedCert.timestamp).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Digital Signature */}
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-medium mb-2 flex items-center">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Digital Signature
+                      </h4>
+                      <p className="text-xs font-mono text-muted-foreground break-all">
+                        SHA256: a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456<br/>
+                        Signature: 3045022100abcdef1234567890abcdef1234567890abcdef1234567890ab...
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* QR Code Section */}
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="text-center">
+                      <h4 className="font-medium mb-2 flex items-center justify-center">
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Certificate QR Code
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Scan to verify certificate authenticity
+                      </p>
+                    </div>
+                    
+                    {qrCodeUrl && (
+                      <div className="p-4 bg-white rounded-lg shadow-sm">
+                        <img 
+                          src={qrCodeUrl} 
+                          alt="Certificate QR Code" 
+                          className="w-64 h-64"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="text-center text-xs text-muted-foreground max-w-sm">
+                      <p>This QR code contains the certificate data and verification URL. Scan with any QR reader to verify the certificate.</p>
+                    </div>
+
+                    {/* Action Buttons in Modal */}
+                    <div className="flex flex-col space-y-2 w-full max-w-sm">
+                      <Button variant="outline" onClick={() => downloadPDF(selectedCert.id)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                      <Button variant="outline" onClick={() => downloadJSON(selectedCert.id, selectedCert)}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Download JSON
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+          
           <Button variant="outline" className="flex-1" onClick={() => downloadPDF(cert.id)}>
             <Download className="h-4 w-4 mr-2" />
             Download PDF
